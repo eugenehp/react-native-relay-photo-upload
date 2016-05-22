@@ -40,6 +40,7 @@ app.use('/graphql', graphqlHttp(request => ({
   pretty: true,
 })));
 
+app.use('/public', express.static(__dirname + '/public'));
 
 var PORT = process.env.PORT || 8080;
 app.listen(PORT, function() { console.log('Listening on '+PORT+'...') })

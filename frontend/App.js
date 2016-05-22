@@ -20,7 +20,8 @@ Relay.injectNetworkLayer(new Relay.DefaultNetworkLayer(sandbox));
 export default class App extends Component {
 
   state = {
-    avatarSource: null
+    avatarSource: null,
+    urlSource:    null
   };
 
   constructor(props) {
@@ -71,6 +72,7 @@ export default class App extends Component {
   }
 
   uploadPhoto(){
+    if(!this.state.avatarSource) return false;
     this.setState({uploading: true});
 
     let file = {
@@ -92,8 +94,12 @@ export default class App extends Component {
         this.setState({uploading: false});
       },
       onSuccess:(e)=>{
-        console.log('onSuccess',e);
-        this.setState({uploading: false});
+        var path = e.image.image.url;
+        console.log('onSuccess',path);
+        this.setState({
+          uploading: false,
+          urlSource: {uri:'http://localhost:8080/'+path}
+        });
       }
     });
     transaction.commit();
@@ -112,7 +118,9 @@ export default class App extends Component {
 
         <TouchableOpacity onPress={this.uploadPhoto.bind(this)}>
           <View style={[styles.avatar, styles.avatarContainer]}>
-            <Text>Upload a Photo</Text>
+          { this.state.urlSource === null ? <Text>Upload a Photo</Text> :
+            <Image style={styles.avatar} source={this.state.urlSource} />
+          }
           </View>
         </TouchableOpacity>
       </View>
