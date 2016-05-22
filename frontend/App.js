@@ -33,9 +33,9 @@ export default class App extends Component {
       title: 'Photo Picker',
       takePhotoButtonTitle: 'Take Photo...',
       chooseFromLibraryButtonTitle: 'Choose from Library...',
-      quality: 0.5,
-      maxWidth: 300,
-      maxHeight: 300,
+      quality: 1,
+      maxWidth: 3000,
+      maxHeight: 3000,
       storageOptions: {
         skipBackup: true
       },
