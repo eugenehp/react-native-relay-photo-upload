@@ -2,6 +2,8 @@
 
 An example of how to upload image using Relay(GraphQL) endpoint from React Native.
 
+## [Screencast](https://youtu.be/mKEjU6FYI4g)
+
 ## Installation 
 
 
