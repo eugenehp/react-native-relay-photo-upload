@@ -14,15 +14,18 @@ import { ImagePickerManager } from 'NativeModules';
 
 import Mutation from './mutation';
 
-let sandbox = "http://localhost:8080";
+let sandbox = "http://localhost:8080/graphql";
 Relay.injectNetworkLayer(new Relay.DefaultNetworkLayer(sandbox));
 
-export default class App extends React.Component {
+export default class App extends Component {
 
   state = {
-    avatarSource: null,
-    videoSource: null
+    avatarSource: null
   };
+
+  constructor(props) {
+    super(props);
+  }
 
   selectPhotoTapped() {
     const options = {
@@ -68,6 +71,8 @@ export default class App extends React.Component {
   }
 
   uploadPhoto(){
+    this.setState({uploading: true});
+
     let file = {
       uri: this.state.avatarSource.uri,
       type: 'image/jpeg',
@@ -76,6 +81,7 @@ export default class App extends React.Component {
 
     let image = { 
       file:file,
+      title: Date.now().toString(),
       clientMutationId: guid()
     };
 
@@ -83,11 +89,11 @@ export default class App extends React.Component {
       onFailure:(_transaction)=>{
         var error = _transaction.getError() || new Error('Mutation failed.');
         console.error(error);
-        // this.state.uploading = false;
+        this.setState({uploading: false});
       },
       onSuccess:(e)=>{
         console.log('onSuccess',e);
-        this.state.uploading = false;
+        this.setState({uploading: false});
       }
     });
     transaction.commit();
@@ -109,10 +115,6 @@ export default class App extends React.Component {
             <Text>Upload a Photo</Text>
           </View>
         </TouchableOpacity>
-
-        { this.state.videoSource &&
-          <Text style={{margin: 8, textAlign: 'center'}}>{this.state.videoSource}</Text>
-        }
       </View>
     );
   }

@@ -1,6 +1,8 @@
 var GraphQL = require('graphql')
 var GraphQLRelay = require('graphql-relay')
-var db = require('./database')
+import { connectionArgs, fromGlobalId, globalIdField, connectionFromArray, mutationWithClientMutationId } from 'graphql-relay';
+import { GraphQLNonNull, GraphQLInputObjectType, GraphQLObjectType, GraphQLString, GraphQLInt, GraphQLID, GraphQLList } from 'graphql';
+import { Image, getImage, getAnonymousImage, uploadImage } from './database';
 
 // This module exports a GraphQL Schema, which is a declaration of all the
 // types, queries and mutations we'll use in our system.
@@ -19,66 +21,25 @@ var db = require('./database')
 
 var nodeDefinitions = GraphQLRelay.nodeDefinitions(function(globalId) {
   var idInfo = GraphQLRelay.fromGlobalId(globalId)
-  if (idInfo.type == 'User') {
-    return db.getUser(idInfo.id)
-  } else if (idInfo.type == 'Widget') {
-    return db.getWidget(idInfo.id)
+  if (idInfo.type == 'Image') {
+    return getImage(idInfo.id)
   }
   return null
 })
 
-// We can now use the Node interface in the GraphQL types of our schema
-
-var widgetType = new GraphQL.GraphQLObjectType({
-  name: 'Widget',
-  description: 'A shiny widget',
-
-  // Relay will use this function to determine if an object in your system is
-  // of a particular GraphQL type
-  isTypeOf: function(obj) { return obj instanceof db.Widget },
-
-  // We can either declare our fields as an object of name-to-definition
-  // mappings or a closure that returns said object (see userType below)
-  fields: {
-    id: GraphQLRelay.globalIdField('Widget'),
-    name: {
-      type: GraphQL.GraphQLString,
-      description: 'The name of the widget',
-    },
-  },
-  // This declares this GraphQL type as a Node
-  interfaces: [nodeDefinitions.nodeInterface],
-})
-
-var userType = new GraphQL.GraphQLObjectType({
-  name: 'User',
-  description: 'A person who uses our app',
-  isTypeOf: function(obj) { return obj instanceof db.User },
+var imageType = new GraphQL.GraphQLObjectType({
+  name: 'Image',
+  description: 'An image entity',
+  isTypeOf: function(obj) { return obj instanceof Image },
 
   // We use a closure here because we need to refer to widgetType from above
   fields: function() {
     return {
-      id: GraphQLRelay.globalIdField('User'),
-      name: {
+      id: GraphQLRelay.globalIdField('Image'),
+      url: {
         type: GraphQL.GraphQLString,
-        description: 'The name of the user',
-      },
-      // Here we set up a paged one-to-many relationship ("Connection")
-      widgets: {
-        description: 'A user\'s collection of widgets',
-
-        // Relay gives us helper functions to define the Connection and its args
-        type: GraphQLRelay.connectionDefinitions({name: 'Widget', nodeType: widgetType}).connectionType,
-        args: GraphQLRelay.connectionArgs,
-
-        // You can define a resolving function for any field.
-        // It can also return a promise if you need async data fetching
-        resolve: function(user, args) {
-          // This wraps a Connection object around your data array
-          // Use connectionFromPromisedArray if you return a promise instead
-          return GraphQLRelay.connectionFromArray(db.getWidgetsByUser(user.id), args)
-        },
-      },
+        description: 'The URL of the image',
+      }
     }
   },
   interfaces: [nodeDefinitions.nodeInterface],
@@ -94,10 +55,47 @@ module.exports = new GraphQL.GraphQLSchema({
       // Relay needs this to query Nodes using global IDs
       node: nodeDefinitions.nodeField,
       // Our own root query field(s) go here
-      user: {
-        type: userType,
-        resolve: function() { return db.getAnonymousUser() },
+      image: {
+        type: imageType,
+        resolve: function() { return getAnonymousImage() },
       },
     },
   }),
+
+  mutation: new GraphQL.GraphQLObjectType({
+    name: 'Mutation',
+    fields: {
+      image: mutationWithClientMutationId({
+        name: 'ImageMutation',
+        description: 'Upload image',
+        inputFields: {
+          title: {
+            type: GraphQLString
+          }
+        },
+        outputFields: {
+          image: {
+            type: imageType,
+            description: 'Image entity',
+            resolve: (payload) => payload.image
+          },
+          error: {
+            type: GraphQLString,
+            description: "Decsription of the error if anything",
+            resolve: (payload) => payload.error
+          }
+        },
+        mutateAndGetPayload: async ({ title }, { rootValue }) => {
+          var file  = rootValue.request.file;
+          let image = await uploadImage(title, file);
+          let error = null;
+
+          return {
+            image:  image,
+            error:  error
+          }
+        }
+      })
+    }
+  })
 })

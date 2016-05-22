@@ -4,8 +4,13 @@
   "description": "simple graphql-relay server for photo mutation",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "./node_modules/babel-cli/bin/babel-node.js ./server.js",
+    "dev": "npm run build && npm run watch",
+    "build": "npm run build:schema",
+    "build:schema": "./node_modules/babel-cli/bin/babel-node.js ./utils/updateSchema.js",
+    "watch": "parallelshell 'npm run watch:schema' 'npm run watch:server'",
+    "watch:schema": "onchange schema/schema.js -- npm run build:schema",
+    "watch:server": "nodemon --watch server.js --watch 'schema/*.js' server.js"
   },
   "keywords": [
     "graphql",
@@ -18,16 +23,24 @@
   "author": "Eugene Hauptmann <eugene.hp2012@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "babel": "^6.5.2",
+    "babel-cli": "^6.6.5",
+    "babel-core": "^6.7.2",
+    "babel-polyfill": "6.5.0",
     "babel-preset-es2015": "^6.9.0",
     "babel-preset-react": "^6.5.0",
+    "babel-preset-stage-0": "^6.5.0",
     "babel-relay-plugin": "^0.8.1",
     "babelify": "^7.3.0",
+    "bluebird": "^3.4.0",
     "browserify": "^13.0.1",
     "browserify-shim": "^3.8.12",
+    "datauri": "^1.0.4",
     "express": "^4.13.4",
     "express-graphql": "^0.5.1",
     "graphql": "^0.6.0",
     "graphql-relay": "^0.4.1",
+    "multer": "^1.1.0",
     "nodemon": "^1.9.2",
     "onchange": "^2.4.0",
     "parallelshell": "^2.0.0",
@@ -56,16 +69,5 @@
       ],
       "browserify-shim"
     ]
-  },
-  "scripts": {
-    "start": "node server.js",
-    "dev": "npm run build && npm run watch",
-    "build": "npm run build:schema && npm run build:browser",
-    "build:schema": "node ./utils/updateSchema.js",
-    "build:browser": "browserify browser.js -o public/bundle.js",
-    "watch": "parallelshell 'npm run watch:schema' 'npm run watch:browser' 'npm run watch:server'",
-    "watch:schema": "onchange schema/schema.js -- npm run build:schema",
-    "watch:browser": "onchange browser.js App.js schema/schema.json -- npm run build:browser",
-    "watch:server": "nodemon --watch server.js --watch 'schema/*.js' server.js"
   }
 }

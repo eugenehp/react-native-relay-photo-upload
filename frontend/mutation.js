@@ -1,7 +1,7 @@
 import Relay from 'react-relay'
 
-const fragmentMutationPayload = Relay.QL`
-   fragment on MutationPayload{
+const ImageMutationPayload = Relay.QL`
+   fragment on ImageMutationPayload{
       image {
         id,
         url
@@ -10,11 +10,12 @@ const fragmentMutationPayload = Relay.QL`
 
 class Mutation extends Relay.Mutation {
     getMutation() {
-        return Relay.QL`mutation {uploadProfilePhoto}`;
+        return Relay.QL`mutation {image}`;
     }
 
     getVariables() {
         return {
+            title: this.props.image['title'],
             clientMutationId: this.props.image['clientMutationId']
         };
     }
@@ -26,14 +27,14 @@ class Mutation extends Relay.Mutation {
     }
 
     getFatQuery() {
-        return fragmentMutationPayload;
+        return ImageMutationPayload;
     }
 
     getConfigs() {
         return [
             {
                 type: "REQUIRED_CHILDREN",
-                children: [fragmentMutationPayload],
+                children: [ImageMutationPayload],
             },
             {
                 type: 'FIELDS_CHANGE',

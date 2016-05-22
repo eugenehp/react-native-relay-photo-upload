@@ -1,9 +1,8 @@
-import React from 'react-native';
+import React, { Component, PropTypes } from 'react';
+import { AppRegistry } from 'react-native';
 import App from './App';
 
-console.log('App',App);
-
-class frontend extends React.Component {
+class frontend extends Component {
   render() {
     return (
       <App />
@@ -11,4 +10,4 @@ class frontend extends React.Component {
   }
 }
 
-React.AppRegistry.registerComponent('frontend', () => frontend);
+AppRegistry.registerComponent('frontend', () => frontend);
